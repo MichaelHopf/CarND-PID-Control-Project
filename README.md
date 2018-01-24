@@ -1,98 +1,44 @@
-# CarND-Controls-PID
-Self-Driving Car Engineer Nanodegree Program
 
----
+# PID Control
 
-## Dependencies
+In this project, I implemented a PID control to steer a car on a track in a simulator. In particular, I had to tune the corresponding parameters such that the car would not depart from the correct path.
 
-* cmake >= 3.5
- * All OSes: [click here for installation instructions](https://cmake.org/install/)
-* make >= 4.1(mac, linux), 3.81(Windows)
-  * Linux: make is installed by default on most Linux distros
-  * Mac: [install Xcode command line tools to get make](https://developer.apple.com/xcode/features/)
-  * Windows: [Click here for installation instructions](http://gnuwin32.sourceforge.net/packages/make.htm)
-* gcc/g++ >= 5.4
-  * Linux: gcc / g++ is installed by default on most Linux distros
-  * Mac: same deal as make - [install Xcode command line tools]((https://developer.apple.com/xcode/features/)
-  * Windows: recommend using [MinGW](http://www.mingw.org/)
-* [uWebSockets](https://github.com/uWebSockets/uWebSockets)
-  * Run either `./install-mac.sh` or `./install-ubuntu.sh`.
-  * If you install from source, checkout to commit `e94b6e1`, i.e.
-    ```
-    git clone https://github.com/uWebSockets/uWebSockets 
-    cd uWebSockets
-    git checkout e94b6e1
-    ```
-    Some function signatures have changed in v0.14.x. See [this PR](https://github.com/udacity/CarND-MPC-Project/pull/3) for more details.
-* Simulator. You can download these from the [project intro page](https://github.com/udacity/self-driving-car-sim/releases) in the classroom.
+My submission includes the following files:
 
-There's an experimental patch for windows in this [PR](https://github.com/udacity/CarND-PID-Control-Project/pull/3)
+- __main.cpp__: Here, the initialization of the PID controller is called as well as the Update step that returns the steering command.
+- __pid.cpp__: In this file, most of the programming takes place including the initialization of the filter, the UpdateError routine and the Twiddle algorithm for hyperparameter tuning. The function TotalError computes the steering command.
+- __pid.h__: The corresponding header file.
 
-## Basic Build Instructions
+![alt text](./pic.PNG "PID control")
 
-1. Clone this repo.
-2. Make a build directory: `mkdir build && cd build`
-3. Compile: `cmake .. && make`
-4. Run it: `./pid`. 
+## Implementation
 
-Tips for setting up your environment can be found [here](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/0949fca6-b379-42af-a919-ee50aa304e6a/lessons/f758c44c-5e40-4e01-93b5-1a82aa4e044f/concepts/23d376c7-0195-4276-bdf0-e02f1f3c665d)
+I implemented the PID control as was presented in the lecture by Sebastian Thrun. The steering command is given by the function TotalError. This procedure is called by the function UpdateError that receives the current CTE (Cross Track Error).
 
-## Editor Settings
+## Reflection
 
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
+In order for the PID controller to work, it is very crucial to choose the right parameters. First, I wanted to start by setting the initial parameters all to zero and just using the twiddle algorithm to tune them. As it turned out, this did not work very well.
 
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
+Therefore, I started experimenting more manually until I found the starting values [0.1, 0.01, 10] which worked quite well already. Then, I used the twiddle algorithm (with dp = [0.01, 0.001, 1]) to do some fine-tuning and ended with the values [0.082, 0.012, 9.331]. However, instead of the total sum of the CTE, I used a decaying sum for the integral part. With this setting, the car is able to drive safely through the track.
 
-## Code Style
+For the manuel tuning, I started by experimenting with the Kp parameter value first, then with the Kd parameter. Here, I found it helpful to have quite a large value in comparison in order to be able to do sharp turns. After that the car drove quite well and choosing the Ki value was only necessary to smoothen the result. Therefore, for my results the parameters Kp and Kd were more important than the Ki value. Actually, I expected this behavior since the integral part comes into play if there is a systematic bias.
 
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
+In the main.cpp file, I also implemented a speed up (to use it, you just have to uncomment it). If the CTE is low, the car is going to speed up in two phases (with speeds 0.5 and 1.0). With this setting, the car is still able to manage the track. It is much faster but also less smooth. I got the following results:
 
-## Project Instructions and Rubric
+| Throttle    | Speed Up 1: cte < x   | Speed Up 2: cte  < x  | Average Speed    |  Car Completes Track    |
+| --- | --- | --- | --- | ---|
+| 0.3 | - | - | 30 | yes |
+| 0.3 | 0.3 | 0.2 | 50 | yes |
+| 0.3 | 0.4 | 0.3 | 54 | yes |
+| 0.3 | 0.5 | 0.4 | 57 | yes |
+| 1.0 | - | - | 64 | sort of\* |
 
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
+\* with full speed the car departs from the path but completes one full round. However, it crashes immediately afterwards...
 
-More information is only accessible by people who are already enrolled in Term 2
-of CarND. If you are enrolled, see [the project page](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/f1820894-8322-4bb3-81aa-b26b3c6dcbaf/lessons/e8235395-22dd-4b87-88e0-d108c5e5bbf4/concepts/6a4d8d42-6a04-4aa6-b284-1697c0fd6562)
-for instructions and the project rubric.
+## Simulation and Video
 
-## Hints!
+The car drives safely thorugh the track. I included a [video](./video.mp4 "Project Video") in the repository. Note that I had to do the recording with my phone since using the simulator and a screen recorder simultaneously turned out be too demanding for my computer.
 
-* You don't have to follow this directory structure, but if you do, your work
-  will span all of the .cpp files here. Keep an eye out for TODOs.
+## Discussion
 
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to we ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
-
+I found that the manual tuning was more important than the twiddle algorithm which I only used for fine-tuning. It would be interesting to apply reinforcement learning in order to obtain an optimal driving behavior.
