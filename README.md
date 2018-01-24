@@ -23,6 +23,20 @@ Therefore, I started experimenting more manually until I found the starting valu
 
 For the manuel tuning, I started by experimenting with the Kp parameter value first, then with the Kd parameter. Here, I found it helpful to have quite a large value in comparison in order to be able to do sharp turns. After that the car drove quite well and choosing the Ki value was only necessary to smoothen the result. Therefore, for my results the parameters Kp and Kd were more important than the Ki value. Actually, I expected this behavior since the integral part comes into play if there is a systematic bias.
 
+I analysed the effects of the individual components by checking the driving behavior of the car with different controllers as follows:
+
+| Type of controller    | Driving behavior    |
+| :--- | :--- |
+| PID | Completes track. Very good and smooth. |
+| P | Does not complete track. The car starts smoothly but keeps oscillating more and more around the ground truth until it crashes. |
+| D | The car does not seem to find the ground truth and keeps deviating slowly but steadily from the road until it crashes.  |
+| I | Similar to the P controller but crashes more quickly. |
+| PD | Completes track but one time slightly touches lane marking. Sharp turns due to derivative part. Also less smooth compared to the PID controller. |
+|PI | Car starts oscillating quickly and crashes. |
+| ID | Completes track without error. Less smooth compared to the PID controller. |
+
+It can be summarized that either the P-component or the I-component is needed for the car to know where the ground truth lane is. The D-component reduces the oscillation and helps with sharp turns. PD, ID, and PID successfully completed the track, however, the PID controller obtains the best driving behavior.
+
 In the main.cpp file, I also implemented a speed up (to use it, you just have to uncomment it). If the CTE is low, the car is going to speed up in two phases (with speeds 0.5 and 1.0). With this setting, the car is still able to manage the track. It is much faster but also less smooth. I got the following results:
 
 | Throttle    | Speed Up 1: cte < x   | Speed Up 2: cte  < x  | Average Speed    |  Car Completes Track    |
